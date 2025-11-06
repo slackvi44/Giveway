@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Grand Giveaway Quiz Entry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        
+        /* Custom Styles for Aesthetics */
+        .quiz-card { min-height: 400px; }
+        
+        .main-card {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* rounded-2xl */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Primary Button Style */
+        .btn-primary { 
+            /* Enhanced shadow for a better look */
+            @apply px-8 py-4 bg-indigo-600 text-white font-extrabold text-lg rounded-xl shadow-xl shadow-indigo-400/70 hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:bg-gray-400 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed; 
+        }
+
+        /* Secondary Button Style */
+        .btn-secondary { 
+            @apply px-8 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-200 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed; 
+        }
+
+        /* Input Fields */
+        .input-field { 
+            @apply w-full p-4 border border-gray-200 rounded-xl bg-white text-gray-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition duration-150; 
+        }
+        .input-field::placeholder {
+            color: #9ca3af; /* gray-400 */
+        }
+
+        /* Quiz Option Styling */
+        .option-label {
+            @apply flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:border-indigo-400 bg-white shadow-sm;
+        }
+        .option-label.selected {
+            border-color: #4f46e5; /* indigo-600 */
+            background-color: #eef2ff; /* indigo-50 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+        }
+        .option-input {
+            appearance: none; /* Hide default radio button */
+            margin-right: 0.75rem;
+        }
+
+        /* Progress Bar Animation */
+        #progress-bar-fill {
+            transition: width 0.4s ease-out;
+        }
+
+        /* ADVERTISEMENT STYLING */
+        .ad-block {
+            border: 3px solid #ef4444; /* red-500 */
+            background-color: #fef3c7; /* yellow-100 */
+            padding: 1rem;
+            margin-bottom: 1.5rem; /* my-6 */
+            text-align: center;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #b45309; /* amber-700 */
+            border-radius: 0.5rem; /* rounded-lg */
+            font-size: 0.875rem; /* text-sm */
+            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3), 0 2px 4px -2px rgba(239, 68, 68, 0.2);
+        }
+        .ad-block-large {
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            border-color: #f97316; /* orange-500 */
+            color: #7c2d12; /* stone-900 */
+            background-color: #fff7ed; /* orange-50 */
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 bg-f3f4f6">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'accent-teal': '#10b981',
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- Firebase Setup (Must be before the main script) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth;
+        let userId = null;
+        let isAuthReady = false;
+
+        if (firebaseConfig) {
+            setLogLevel('Debug');
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Auth failed:", error);
+                        userId = crypto.randomUUID();
+                    }
+                }
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                isAuthReady = true;
+                console.log("Authenticated user ID:", userId);
+                if (window.initApp) window.initApp({ db, userId, appId, isAuthReady, addDoc, collection }); 
+            });
+        } else {
+             // Fallback for local testing
+            console.warn("Firebase not configured. Submission disabled.");
+            if (window.initApp) window.initApp({ db: null, userId: crypto.randomUUID(), appId: 'local-app', isAuthReady: true, addDoc: null, collection: null });
+        }
+    </script>
+    
+    <!-- MAIN APPLICATION WRAPPER - USES 3-COLUMN LAYOUT ON LARGE SCREENS -->
+    <div id="wrapper" class="w-full mx-auto max-w-7xl lg:grid lg:grid-cols-[250px_1fr_250px] lg:gap-x-8">
+
+        <!-- 1. LEFT AD COLUMN (Desktop Only) -->
+        <div id="left-ad-column" class="hidden lg:block space-y-8 pt-10">
+            <!-- Ad Block L1: Skyscraper -->
+            <div class="ad-block ad-block-large h-96">
+                MEGA SIDE BANNER (250x600) - CLICK HERE FOR CRYPTO SECRETS!
+            </div>
+            <!-- Ad Block L2: Medium Rectangle -->
+            <div class="ad-block ad-block-large h-48">
+                STOCK MARKET TIPS! (250x300)
+            </div>
+             <!-- Ad Block L3: Small Banner -->
+            <div class="ad-block ad-block-large h-24">
+                WORK FROM HOME JOBS! (250x125)
+            </div>
+        </div>
+
+        <!-- 2. MAIN CONTENT COLUMN (MAX-WIDTH 2XL ON MOBILE, FULL WIDTH IN GRID) -->
+        <div id="app" class="w-full main-card p-6 sm:p-10 transition-all duration-500 max-w-2xl mx-auto lg:max-w-full">
+            
+            <!-- Phase 1: Entry Form - Aesthetic Update -->
+            <div id="entry-form" class="phase">
+                
+                <!-- Ad Block 1: Above the Main Heading -->
+                <div class="ad-block mb-4">
+                    DON'T MISS OUT! LIMITED EDITION NFTS ON SALE! (Interrupting header)
+                </div>
+
+                <div class="text-center mb-8">
+                    <!-- SVG Icon for visual appeal -->
+                    <svg class="w-16 h-16 text-indigo-600 mx-auto mb-4 p-3 bg-indigo-100 rounded-full shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c1.657 0 3 .895 3 2s-1.343 2-3 2-3 .895-3 2-1.343 2-3 2V8c1.657 0 3 .895 3 2s1.343 2 3 2 3 .895 3 2V8z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14c1.105 0 2-.895 2-2s-1.343-2-3-2-3-2-3-2V8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2h-8a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                    <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Secure Your Entry Slot</h1>
+                    <p class="text-lg text-gray-500 font-medium">Please provide your details to unlock the exclusive entry survey.</p>
+                </div>
+                
+                <form id="entry-submission-form" class="space-y-6 p-6 bg-gray-50 border border-gray-100 rounded-xl shadow-inner">
+                    
+                    <div>
+                        <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">Your Full Name</label>
+                        <input type="text" id="name" required class="input-field placeholder-gray-400" placeholder="e.g., John Doe">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                        <input type="email" id="email" required class="input-field placeholder-gray-400" placeholder="you@example.com">
+                    </div>
+                    
+                    <!-- Ad Block 2: Before Discord Field -->
+                    <div class="ad-block">
+                        WIN A FREE TRIP TO BALI! (CLICK HERE)
+                    </div>
+
+                    <div>
+                        <label for="discord-name" class="block text-sm font-semibold text-gray-700 mb-2">Your Discord Username</label>
+                        <input type="text" id="discord-name" required class="input-field placeholder-gray-400" placeholder="Must be valid for contact">
+                        <p class="text-xs text-gray-400 mt-1">We need this to contact you if you win.</p>
+                    </div>
+                    
+                    <div id="entry-error" class="text-red-500 text-sm font-semibold hidden">Please fill in all fields correctly.</div>
+                    
+                    <button type="submit" id="start-quiz-btn" class="btn-primary w-full mt-6">
+                        Start Entry Survey &rarr;
+                    </button>
+                    
+                    <div class="text-xs text-center text-gray-400 mt-4">Authentication ID: <span id="auth-id">Loading...</span></div>
+                </form>
+                
+                <!-- Ad Block 3: Below the Form (Large Ad) -->
+                <div class="ad-block ad-block-large mt-6 h-32">
+                    LARGE ADVERTISEMENT: BEST NEW MOBILE GAME! INSTALL NOW! (300x250)
+                </div>
+            </div>
+
+            <!-- Phase 2: Quiz Container -->
+            <div id="quiz-container" class="phase hidden">
+                <h1 class="text-3xl font-extrabold text-indigo-600 mb-4 text-center">Entry Survey: Questions</h1>
+                
+                <!-- Ad Block 4: Top of Quiz Container (Large Ad) -->
+                <div class="ad-block ad-block-large mb-6 h-24">
+                    CLICK HERE TO UNLOCK CHEATS FOR THIS QUIZ! (Totally not a virus)
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-1">
+                        <span id="progress-text" class="text-sm font-semibold text-indigo-600">Question 1 of 60</span>
+                        <span id="progress-percent" class="text-sm font-semibold text-gray-500">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progress-bar-fill" class="bg-indigo-500 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <!-- Ad Block 5: Below Progress Bar (Small Ad) -->
+                <div class="ad-block mb-4">
+                    LAST CHANCE FOR FREE MONEY! VALID ONLY FOR TODAY!
+                </div>
+                
+                <!-- Message Area for Errors/Warnings -->
+                <div id="quiz-message" class="text-center bg-red-100 border border-red-400 text-red-700 p-3 rounded-lg font-bold mb-4 hidden animate-pulse"></div>
+
+                <div id="question-area" class="quiz-card p-6 border border-gray-100 rounded-xl shadow-lg bg-white">
+                    <!-- Question content will be rendered here -->
+                    <p class="text-lg text-center text-gray-500">Loading quiz...</p>
+                </div>
+                
+                <!-- Ad Block 6: Below the Question Area -->
+                <div class="ad-block ad-block-large mt-6 h-20">
+                    AD: GET YOUR FREE AMAZON VOUCHER NOW! (728x90)
+                </div>
+
+                <div id="navigation-area" class="flex justify-between mt-8">
+                    <button id="prev-btn" class="btn-secondary">
+                        &larr; Previous
+                    </button>
+                    <button id="next-btn" class="btn-primary">
+                        Next Question &rarr;
+                    </button>
+                    <button id="submit-btn" class="btn-primary hidden" disabled>
+                        Submit All 60 Answers
+                    </button>
+                </div>
+            </div>
+
+            <!-- Phase 3: Completion Screen -->
+            <div id="result-container" class="phase hidden text-center">
+                <svg class="w-24 h-24 text-accent-teal mx-auto mb-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h2 class="text-4xl font-extrabold text-accent-teal mb-4">Entry Confirmed!</h2>
+                <p class="text-gray-600 mb-10 text-lg">Thank you for completing the full entry survey. Your responses and details have been recorded successfully.</p>
+                
+                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-6 rounded-lg shadow-xl" role="alert">
+                    <p class="font-bold text-xl mb-3 flex items-center justify-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        CRITICAL NEXT STEP
+                    </p>
+                    <p class="mt-2 text-2xl font-mono text-gray-900">
+                        <span class="font-semibold block text-base text-gray-600 mb-1">Contact your host on Discord:</span>
+                        <span class="block mt-1 p-3 bg-yellow-200 rounded-md font-extrabold text-red-600 select-all">slackvi44</span>
+                    </p>
+                </div>
+                
+                <p id="submission-status" class="mt-6 text-sm text-gray-500 font-medium">Submission data processing...</p>
+                
+                <!-- Ad Block 7: Bottom of Completion Screen -->
+                <div class="ad-block ad-block-large mt-6 h-20">
+                    AD: CONGRATULATIONS! CLAIM YOUR PRIZE NOW! (728x90)
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 3. RIGHT AD COLUMN (Desktop Only) -->
+        <div id="right-ad-column" class="hidden lg:block space-y-8 pt-10">
+            <!-- Ad Block R1: Skyscraper -->
+            <div class="ad-block ad-block-large h-96">
+                $100,000 GIVEAWAY ENTRY FORM! (250x600)
+            </div>
+            <!-- Ad Block R2: Medium Rectangle -->
+            <div class="ad-block ad-block-large h-48">
+                DOWNLOAD OUR NEW APP! (250x300)
+            </div>
+             <!-- Ad Block R3: Small Banner -->
+            <div class="ad-block ad-block-large h-24">
+                GET RICH QUICK SCHEME! (250x125)
+            </div>
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+        // --- QUIZ DATA: 60 Unique Questions ---
+        const NUM_QUESTIONS = 60;
+        const quizQuestions = [
+            // 1. Personal Preferences
+            { id: 1, question: "What is your favorite color?", options: ["Blue", "Red", "Green", "Yellow"] },
+            { id: 2, question: "Which season do you prefer?", options: ["Spring", "Summer", "Autumn", "Winter"] },
+            { id: 3, question: "Are you an early bird or a night owl?", options: ["Early Bird", "Night Owl", "Neutral", "Depends on the day"] },
+            { id: 4, question: "Do you prefer coffee or tea?", options: ["Coffee", "Tea", "Both equally", "Neither"] },
+            { id: 5, question: "Which animal is your favorite pet?", options: ["Dog", "Cat", "Fish", "Rabbit"] },
+            { id: 6, question: "Do you prefer mountains or the beach?", options: ["Mountains", "Beach", "City", "Countryside"] },
+            { id: 7, question: "Do you enjoy reading?", options: ["Yes, often", "Sometimes", "Rarely", "Never"] },
+            { id: 8, question: "What is your preferred mode of travel?", options: ["Car", "Train", "Plane", "Bike"] },
+            { id: 9, question: "Do you like to cook?", options: ["Yes, a lot", "Occasionally", "Only simple things", "No, I hate it"] },
+            { id: 10, question: "What type of weather do you like best?", options: ["Sunny", "Rainy", "Cloudy", "Snowy"] },
+            
+            // 2. Technology Use
+            { id: 11, question: "What is your primary operating system?", options: ["Windows", "macOS", "Linux", "Mobile OS (iOS/Android)"] },
+            { id: 12, question: "How often do you check social media?", options: ["Hourly", "Several times a day", "Once a day", "Rarely or never"] },
+            { id: 13, question: "Do you prefer physical or digital books/media?", options: ["Physical", "Digital", "Mix of both", "I don't consume much media"] },
+            { id: 14, question: "What is your preferred browser?", options: ["Chrome", "Firefox", "Safari", "Edge"] },
+            { id: 15, question: "How important is fast internet speed to you?", options: ["Extremely important", "Very important", "Moderately important", "Not important"] },
+            { id: 16, question: "Do you use a desktop or laptop more often?", options: ["Desktop", "Laptop", "Mobile/Tablet", "Equally"] },
+            { id: 17, question: "How many hours a day do you spend looking at a screen?", options: ["0-3 hours", "4-6 hours", "7-10 hours", "10+ hours"] },
+            { id: 18, question: "Do you prefer texting or calling?", options: ["Texting", "Calling", "Emailing", "Face-to-face"] },
+            { id: 19, question: "Which video streaming service do you use most?", options: ["Netflix", "YouTube", "Hulu/Prime Video", "None/Other"] },
+            { id: 20, question: "Do you back up your computer files regularly?", options: ["Yes, always", "Sometimes", "Rarely", "Never"] },
+            
+            // 3. Food/Drink
+            { id: 21, question: "What is your favorite dessert?", options: ["Cake", "Ice Cream", "Pie", "Cookies"] },
+            { id: 22, question: "Do you prefer savory or sweet foods?", options: ["Savory", "Sweet", "Both equally", "Depends on the time of day"] },
+            { id: 23, question: "Which fast food item do you enjoy most?", options: ["Burger", "Pizza", "Taco/Burrito", "Fried Chicken"] },
+            { id: 24, question: "What spice level do you prefer?", options: ["Mild/None", "Medium", "Spicy", "Very spicy"] },
+            { id: 25, question: "Do you drink soda/fizzy drinks?", options: ["Regularly", "Occasionally", "Rarely", "Never"] },
+            { id: 26, question: "What is your favorite fruit?", options: ["Apple", "Banana", "Strawberry", "Orange"] },
+            { id: 27, question: "Do you prefer breakfast, lunch, or dinner?", options: ["Breakfast", "Lunch", "Dinner", "Snacks"] },
+            { id: 28, question: "Do you eat meat?", options: ["Yes, every day", "Occasionally", "Rarely", "No (Vegetarian/Vegan)"] },
+            { id: 29, question: "How do you feel about cilantro?", options: ["Love it", "Like it", "Neutral", "Hate it (tastes like soap)"] },
+            { id: 30, question: "What is your preferred way to eat eggs?", options: ["Scrambled", "Fried", "Poached", "Omelette"] },
+            
+            // 4. Hobbies/Free Time
+            { id: 31, question: "Do you play video games?", options: ["Yes, frequently", "Occasionally", "Rarely", "No"] },
+            { id: 32, question: "What type of movies do you prefer?", options: ["Action/Adventure", "Comedy", "Sci-Fi/Fantasy", "Documentary/Drama"] },
+            { id: 33, question: "How do you usually listen to music?", options: ["Streaming service (Spotify/Apple)", "Radio", "Vinyl/CDs", "I rarely listen"] },
+            { id: 34, question: "Do you enjoy team sports or individual activities?", options: ["Team sports", "Individual activities", "Watching sports only", "Neither"] },
+            { id: 35, question: "Do you prefer to socialize in large groups or small settings?", options: ["Large groups", "Small settings", "One-on-one", "Alone time"] },
+            { id: 36, question: "How often do you exercise?", options: ["Daily", "Several times a week", "Rarely", "Never"] },
+            { id: 37, question: "Do you enjoy puzzles or brain games?", options: ["Yes, a lot", "A little", "Not really", "No interest"] },
+            { id: 38, question: "What kind of fictional genre interests you most?", options: ["Mystery/Thriller", "Historical Fiction", "Romance", "Horror"] },
+            { id: 39, question: "Do you like attending live events (concerts, games)?", options: ["Love them", "Enjoy them", "Neutral/Indifferent", "Avoid them"] },
+            { id: 40, question: "What is your favorite type of craft or creative hobby?", options: ["Drawing/Painting", "Writing/Poetry", "Woodworking/Building", "Knitting/Sewing"] },
+            
+            // 5. Hypothetical/Opinion
+            { id: 41, question: "Would you rather have unlimited money or unlimited time?", options: ["Money", "Time", "Both equally", "A modest amount of both"] },
+            { id: 42, question: "If you could instantly learn one skill, what would it be?", options: ["Speaking all languages", "Playing a musical instrument", "Mastering programming", "Being a master chef"] },
+            { id: 43, question: "Do you believe in luck?", options: ["Yes, strongly", "To some extent", "Not really", "No, only hard work"] },
+            { id: 44, question: "Is it more important to be kind or to be right?", options: ["Kind", "Right", "Both are equally important", "Neither"] },
+            { id: 45, question: "Would you explore space or the deep ocean?", options: ["Space", "Deep Ocean", "Neither, I'll stay on land", "I'd explore both"] },
+            { id: 46, question: "How would you rate your patience level?", options: ["Very patient", "Moderately patient", "Sometimes impatient", "Very impatient"] },
+            { id: 47, question: "Do you prefer giving gifts or receiving them?", options: ["Giving", "Receiving", "Both equally", "I don't care about gifts"] },
+            { id: 48, question: "Which superpower would you choose?", options: ["Flying", "Invisibility", "Teleportation", "Reading minds"] },
+            { id: 49, question: "Do you trust your first instinct?", options: ["Always", "Most of the time", "Rarely", "Never"] },
+            { id: 50, question: "What makes you feel most motivated?", options: ["Personal achievement", "Recognition from others", "Helping someone else", "Money/Reward"] },
+
+            // 6. General Knowledge/Simple Facts
+            { id: 51, question: "Which planet is known as the 'Red Planet'?", options: ["Venus", "Mars", "Jupiter", "Saturn"] },
+            { id: 52, question: "How many sides does a triangle have?", options: ["Two", "Three", "Four", "Five"] },
+            { id: 53, question: "What is the largest ocean on Earth?", options: ["Atlantic", "Indian", "Arctic", "Pacific"] },
+            { id: 54, question: "Which famous structure is in Paris, France?", options: ["Statue of Liberty", "Great Wall of China", "Eiffel Tower", "Colosseum"] },
+            { id: 55, question: "What is the main ingredient in guacamole?", options: ["Tomato", "Avocado", "Onion", "Lime"] },
+            { id: 56, question: "What is 7 times 8?", options: ["49", "56", "64", "72"] },
+            { id: 57, question: "Which gas do plants primarily absorb from the air?", options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"] },
+            { id: 58, question: "How many hours are in a day?", options: ["12", "18", "24", "48"] },
+            { id: 59, question: "What is the capital city of Japan?", options: ["Seoul", "Beijing", "Tokyo", "Bangkok"] },
+            { id: 60, question: "Which is the fastest land animal?", options: ["Lion", "Cheetah", "Gazelle", "Tiger"] }
+        ];
+        // -----------------
+
+        let db, userId, appId, isAuthReady, addDoc, collection;
+        let currentPhase = 'entry'; // 'entry', 'quiz', 'done'
+        let currentQuestionIndex = 0; // 0-indexed
+        let entryData = {}; // { name, email, discord }
+        let answers = {}; // { questionId: selectedOptionIndex, ... }
+        let isSubmitting = false;
+
+        // DOM Elements
+        const authIdSpan = document.getElementById('auth-id');
+        const entryForm = document.getElementById('entry-form');
+        const entrySubmissionForm = document.getElementById('entry-submission-form');
+        const entryError = document.getElementById('entry-error');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultContainer = document.getElementById('result-container');
+        const questionArea = document.getElementById('question-area');
+        const progressText = document.getElementById('progress-text');
+        const progressPercent = document.getElementById('progress-percent');
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const quizMessage = document.getElementById('quiz-message');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const submissionStatus = document.getElementById('submission-status');
+
+        /**
+         * Transitions the UI between the three phases.
+         */
+        function setPhase(newPhase) {
+            currentPhase = newPhase;
+            entryForm.classList.add('hidden');
+            quizContainer.classList.add('hidden');
+            resultContainer.classList.add('hidden');
+            quizMessage.classList.add('hidden');
+
+            switch (currentPhase) {
+                case 'entry':
+                    entryForm.classList.remove('hidden');
+                    break;
+                case 'quiz':
+                    quizContainer.classList.remove('hidden');
+                    renderQuestion();
+                    break;
+                case 'done':
+                    resultContainer.classList.remove('hidden');
+                    break;
+            }
+        }
+
+        /**
+         * Phase 1: Handles form submission and moves to the quiz phase.
+         */
+        entrySubmissionForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const discord = document.getElementById('discord-name').value.trim();
+
+            if (!name || !email || !discord) {
+                entryError.textContent = "Please fill in all fields.";
+                entryError.classList.remove('hidden');
+                return;
+            }
+
+            entryData = { name, email, discord };
+            entryError.classList.add('hidden');
+            
+            // Move to Quiz Phase
+            setPhase('quiz');
+        });
+
+
+        // --- Phase 2: Quiz Logic ---
+
+        /**
+         * Updates the disabled state of the Previous and Submit buttons, and the progress bar.
+         */
+        function updateNavigationButtonStates() {
+            // Previous button is disabled only on the first question
+            prevBtn.disabled = currentQuestionIndex === 0;
+
+            const isLastQuestion = currentQuestionIndex === NUM_QUESTIONS - 1;
+            
+            // Update Progress Bar
+            const answeredCount = Object.keys(answers).length;
+            const progress = (answeredCount / NUM_QUESTIONS) * 100;
+            const currentProgress = ((currentQuestionIndex + 1) / NUM_QUESTIONS) * 100;
+
+            progressText.textContent = `Question ${currentQuestionIndex + 1} of ${NUM_QUESTIONS} (${answeredCount} answered)`;
+            progressPercent.textContent = `${Math.round(progress)}% Complete`;
+            progressBarFill.style.width = `${currentProgress}%`; // Use current index for bar animation
+
+            // Submit button is enabled only if it's the last question AND ALL questions are answered
+            if (isLastQuestion) {
+                const allAnswered = answeredCount === NUM_QUESTIONS;
+                submitBtn.disabled = !allAnswered;
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+
+        function renderQuestion() {
+            const q = quizQuestions[currentQuestionIndex];
+            const currentAnswerIndex = answers[q.id];
+
+            // 1. Update Progress and Navigation
+            updateNavigationButtonStates();
+            quizMessage.classList.add('hidden'); // Clear error message when rendering a new question
+
+            // 2. Render Question Content
+            let contentHTML = `
+                <h3 class="text-2xl font-extrabold text-gray-800 mb-6">${q.question}</h3>
+                <div id="options-list" class="space-y-4">
+            `;
+            
+            q.options.forEach((option, index) => {
+                const isChecked = currentAnswerIndex === index;
+                const labelClass = isChecked ? 'selected' : '';
+                const checkIcon = isChecked ? `
+                    <svg class="w-5 h-5 ml-auto text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                ` : `
+                    <div class="w-5 h-5 ml-auto text-gray-400 border border-gray-300 rounded-full"></div>
+                `;
+
+                contentHTML += `
+                    <label 
+                        class="option-label ${labelClass}"
+                        onclick="handleAnswer(${q.id}, ${index})"
+                    >
+                        <input 
+                            type="radio" 
+                            name="question-${q.id}" 
+                            value="${index}" 
+                            class="option-input"
+                            ${isChecked ? 'checked' : ''}
+                        >
+                        <span class="text-gray-900 font-medium">${option}</span>
+                        ${checkIcon}
+                    </label>
+                `;
+            });
+
+            contentHTML += `</div>`;
+            questionArea.innerHTML = contentHTML;
+            
+            // 3. Update Navigation Buttons visibility
+            const isLastQuestion = currentQuestionIndex === NUM_QUESTIONS - 1;
+            nextBtn.classList.toggle('hidden', isLastQuestion);
+            submitBtn.classList.toggle('hidden', !isLastQuestion);
+        }
+
+        window.handleAnswer = function(questionId, selectedOptionIndex) {
+            answers[questionId] = selectedOptionIndex;
+            
+            // 1. Clear any error message on answer selection
+            quizMessage.classList.add('hidden');
+
+            // 2. Rerender for immediate visual feedback (selection style)
+            renderQuestion();
+        }
+
+        function nextQuestion() {
+            const q = quizQuestions[currentQuestionIndex];
+            
+            // Check if the current question is answered
+            if (!answers.hasOwnProperty(q.id)) {
+                // Display the warning message
+                quizMessage.textContent = "Oops! Please select an answer before proceeding to the next question.";
+                quizMessage.classList.remove('hidden');
+                
+                // Prevent navigation
+                return;
+            }
+
+            // Clear any previous warning and proceed
+            quizMessage.classList.add('hidden');
+            if (currentQuestionIndex < NUM_QUESTIONS - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            // No answer requirement for moving backward
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+
+        // --- Event Listeners for Quiz Navigation ---
+        nextBtn.addEventListener('click', nextQuestion);
+        prevBtn.addEventListener('click', prevQuestion);
+        submitBtn.addEventListener('click', submitQuiz);
+
+        /**
+         * Phase 3: Submits the final entry data to Firestore.
+         */
+        async function submitQuiz() {
+            // Final check before submission
+            if (isSubmitting || !isAuthReady || Object.keys(answers).length !== NUM_QUESTIONS) {
+                if (Object.keys(answers).length !== NUM_QUESTIONS) {
+                    quizMessage.textContent = "Please ensure all 60 questions have been answered before submitting.";
+                    quizMessage.classList.remove('hidden');
+                }
+                console.error("Submission blocked. Not all questions answered or auth not ready.");
+                return;
+            }
+
+            isSubmitting = true;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            setPhase('done');
+            submissionStatus.textContent = 'Submitting entry and survey responses...';
+
+            if (!db || !addDoc || !collection) {
+                submissionStatus.textContent = "Submission failed: Firebase not initialized (local mode).";
+                return;
+            }
+
+            try {
+                // Combine all data
+                const finalSubmissionData = {
+                    userId: userId,
+                    timestamp: new Date().toISOString(),
+                    ...entryData, // name, email, discord
+                    totalQuestions: NUM_QUESTIONS,
+                    answers: answers, // Stored as a map of questionId: optionIndex
+                    answersJson: JSON.stringify(answers) 
+                };
+
+                // Path: /artifacts/{appId}/public/data/giveaway_submissions
+                const submissionsRef = collection(db, 'artifacts', appId, 'public', 'data', 'giveaway_entries');
+                
+                await addDoc(submissionsRef, finalSubmissionData);
+
+                submissionStatus.textContent = 'Success! Your entry and survey are confirmed. Proceed to Discord.';
+                submissionStatus.classList.add('text-accent-teal', 'font-bold');
+                console.log("Full entry submitted successfully:", finalSubmissionData);
+
+            } catch (error) {
+                console.error("Error submitting entry:", error);
+                submissionStatus.textContent = `Submission failed: ${error.message}. Please check console.`;
+                submissionStatus.classList.add('text-red-500', 'font-bold');
+            } finally {
+                isSubmitting = false;
+            }
+        }
+        
+        /**
+         * Main initialization function called after Firebase auth is ready.
+         */
+        window.initApp = function(deps) {
+            db = deps.db;
+            userId = deps.userId;
+            appId = deps.appId;
+            isAuthReady = deps.isAuthReady;
+            addDoc = deps.addDoc;
+            collection = deps.collection;
+
+            // Display the User ID for tracking/debugging
+            authIdSpan.textContent = userId;
+            
+            // Start the application at the Entry Phase
+            setPhase('entry');
+        };
+    </script>
+</body>
+</html>
